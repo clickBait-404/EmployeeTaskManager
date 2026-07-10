@@ -1,0 +1,26 @@
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Flask
+instance/
+
+# Environment Variables
+.env
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# MySQL
+*.db
+
+# Logs
+*.log
+
+# Node
+node_modules/

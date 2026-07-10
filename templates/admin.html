@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - Task Management System</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="page-header">
+        <h1>Task Management</h1>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
+    </div>
+
+    <!-- Flash messages -->
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="dashboard-container">
+
+        <!-- Main column: form + table -->
+        <div class="main-column">
+
+            <!-- Add Task Card -->
+            <div class="card">
+                <h2>Create Task</h2>
+                <form method="POST" action="{{ url_for('admin.add_task') }}" id="taskForm" class="task-form" novalidate>
+                    <div class="form-row">
+
+                        <div class="form-group">
+                            <label for="task_id">Task ID</label>
+                            <div class="readonly-field">Auto Generated</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="employee_id">Employee Name</label>
+                            <select id="employee_id" name="employee_id" required>
+                                <option value="">Select Employee</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.user_id }}">{{ emp.employee_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="field-error" id="employeeError">Please select an employee.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="task_title">Task Title</label>
+                            <select id="task_title" name="task_title" required>
+                                <option value="">Select Task</option>
+                                {% for title in task_titles %}
+                                <option value="{{ title }}">{{ title }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="field-error" id="taskTitleError">Please select a task.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="completed">Completed</label>
+                            <select id="completed" name="completed" required>
+                                <option value="False" selected>False</option>
+                                <option value="True">True</option>
+                            </select>
+                            <div class="field-error" id="completedError">Please select a status.</div>
+                        </div>
+
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn">Submit</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Task Table -->
+            <div class="card">
+                <h2>All Tasks</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Task ID</th>
+                                <th>Employee Name</th>
+                                <th>Task Title</th>
+                                <th>Completed</th>
+                                <th>Created Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="taskTableBody">
+                            {% for task in tasks %}
+                            <tr data-task-id="{{ task.task_id }}">
+                                <td>{{ task.task_id }}</td>
+                                <td>{{ task.employee_name }}</td>
+                                <td>{{ task.task_title }}</td>
+                                <td>
+                                    {% if task.completed %}
+                                    <span class="status-pill done">True</span>
+                                    {% else %}
+                                    <span class="status-pill pending">False</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ task.created_at }}</td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button type="button" class="btn btn-edit"
+                                            data-task-id="{{ task.task_id }}">Edit</button>
+                                        <form method="POST"
+                                              action="{{ url_for('admin.delete_task_route', task_id=task.task_id) }}"
+                                              class="delete-form">
+                                            <button type="submit" class="btn btn-danger btn-delete">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr class="empty-row">
+                                <td colspan="6">No tasks yet. Create one above.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Side column: logged-in-as box -->
+        <div class="side-column">
+            <div class="side-box">
+                <div class="label">Logged in as</div>
+                <div class="role-name">Admin</div>
+            </div>
+            <div class="side-box">
+                <div class="label">Name</div>
+                <div class="role-name" style="font-size:14px;">{{ employee_name }}</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <h2>Edit Task</h2>
+            <form method="POST" id="editTaskForm" novalidate>
+                <div class="form-group">
+                    <label for="edit_task_id">Task ID</label>
+                    <div class="readonly-field" id="editTaskIdDisplay"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_employee_id">Employee Name</label>
+                    <select id="edit_employee_id" name="employee_id" required>
+                        <option value="">Select Employee</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.user_id }}">{{ emp.employee_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="field-error" id="editEmployeeError">Please select an employee.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_task_title">Task Title</label>
+                    <select id="edit_task_title" name="task_title" required>
+                        <option value="">Select Task</option>
+                        {% for title in task_titles %}
+                        <option value="{{ title }}">{{ title }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="field-error" id="editTaskTitleError">Please select a task.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_completed">Completed</label>
+                    <select id="edit_completed" name="completed" required>
+                        <option value="False">False</option>
+                        <option value="True">True</option>
+                    </select>
+                    <div class="field-error" id="editCompletedError">Please select a status.</div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelEditBtn">Cancel</button>
+                    <button type="submit" class="btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Base URL patterns needed by script.js for AJAX edit calls
+        window.EDIT_TASK_URL_BASE = "{{ url_for('admin.edit_task', task_id=0) }}".replace('0', '');
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
