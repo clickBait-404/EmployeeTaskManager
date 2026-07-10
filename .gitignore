@@ -1,6 +1,6 @@
-
 # Python
 venv/
+.venv/
 __pycache__/
 *.pyc
 
@@ -13,14 +13,21 @@ instance/
 # VS Code
 .vscode/
 
-# macOS
-.DS_Store
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# MySQL
+# Database
 *.db
+*.sqlite3
 
 # Logs
 *.log
 
 # Node
 node_modules/
+
+# Build
+dist/
+build/
